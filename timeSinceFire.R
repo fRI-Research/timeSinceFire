@@ -15,11 +15,16 @@ defineModule(sim, list(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
     defineParameter("returnInterval", "numeric", 1.0, NA, NA, desc = "interval between main events"),
     defineParameter("startTime","numeric", 0, NA, NA, desc = "time of first burn event"),
-    defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "This describes the simulation time at which the first save event should occur")
+    defineParameter(".plotInitialTime", "numeric", NA, NA, NA,
+                    desc = "simulation time at which the first plot event should occur"),
+    defineParameter(".plotInterval", "numeric", NA, NA, NA,
+                    desc = "simulation time at which the first plot event should occur"),
+    defineParameter(".saveInitialTime", "numeric", NA, NA, NA,
+                    desc = "simulation time at which the first save event should occur"),
+    defineParameter(".saveInterval", "numeric", NA, NA, NA,
+                    desc = "simulation time at which the first save event should occur"),
+    defineParameter(".useCache", "logical", FALSE, NA, NA,
+                    desc = "simulation time at which the first save event should occur")
   ),
   inputObjects = data.frame(
     objectName = c("rstFlammable", "fireReturnInterval", "rstCurrentBurn", "fireTimestep"),
@@ -34,14 +39,11 @@ defineModule(sim, list(
   outputObjects = data.frame(
     objectName = c("rstTimeSinceFire", "burnLoci"),
     objectClass = c("RasterLayer", "numeric"),
-    desc = c("A Raster where the pixels represent the number of years since last burn",
+    desc = c("A Raster where the pixels represent the number of years since last burn.",
              "A integer vector of cell indices where burns occurred in the latest year. It is derived from rstCurrentBurn"),
     stringsAsFactors = FALSE
   )
 ))
-
-## event types
-#   - type `init` is required for initialiazation
 
 doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
   if (eventType == "init") {
@@ -58,18 +60,15 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
   } else if (eventType == "age") {
     sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
     fireTimestep <- if (is.null(sim$fireTimestep)) P(sim)$returnInterval else sim$fireTimestep
-    sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[]) + as.integer(fireTimestep) #preserves NAs
+    sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[]) + as.integer(fireTimestep) # preserves NAs
     sim$rstTimeSinceFire[sim$burnLoci] <- 0L
-    #schedule next age event
+    # schedule next age event
     sim <- scheduleEvent(sim, time(sim) + fireTimestep, "timeSinceFire", "age")
   } else if (eventType == "plot") {
     rtsf <- sim$rstTimeSinceFire
     plotFn(rtsf, title = "Time since fire (age)", new = TRUE)
-    #Plot(rtsf, title = "Time since fire (age)", new = TRUE)
-    # e.g.,
+    # schedule next plot event
     sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "timeSinceFire", "plot")
-
-    # ! ----- STOP EDITING ----- ! #
   } else if (eventType == "save") {
     # ! ----- EDIT BELOW ----- ! #
     # do stuff for this event
@@ -92,7 +91,7 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
 
 ## event functions
 #   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
+#   - `modulenameInit()` function is required for initialization;
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template initialization
@@ -107,7 +106,7 @@ Init <- function(sim) {
            "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire")
 
     }
-    # Much faster than call rasterize again
+    # Much faster than calling rasterize() again
     sim$rstTimeSinceFire <- sim$fireReturnInterval
     #sim$rstTimeSinceFire[] <- factorValues(sim$rasterToMatch, sim$rasterToMatch[],
     #                                       att = "fireReturnInterval")[[1]]
@@ -120,4 +119,3 @@ Init <- function(sim) {
 plotFn <- function(rtsf, title = "Time since fire (age)", new = TRUE) {
   Plot(rtsf, title = title, new = new)
 }
-
