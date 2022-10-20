@@ -19,6 +19,11 @@ defineModule(sim, list(
                     desc = "simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA,
                     desc = "simulation time at which the first plot event should occur"),
+    defineParameter(".plots", "character", c("screen"), NA, NA,
+                    paste("Passed to `types` in `Plots` (see `?Plots`).",
+                          "There are a few plots that are made within this module, if set.",
+                          "Note that plots (or their data) saving will ONLY occur at `end(sim)`.",
+                          "If `NA`, plotting is turned off completely (this includes plot saving).")),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA,
                     desc = "simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA,
@@ -65,23 +70,12 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
     # schedule next age event
     sim <- scheduleEvent(sim, time(sim) + fireTimestep, "timeSinceFire", "age")
   } else if (eventType == "plot") {
-    rtsf <- sim$rstTimeSinceFire
-    plotFn(rtsf, title = "Time since fire (age)", new = TRUE)
-    # schedule next plot event
-    sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "timeSinceFire", "plot")
-  } else if (eventType == "save") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "timeSinceFire", "save")
-
-    # ! ----- STOP EDITING ----- ! #
+    if (anyPlotting(P(sim)$.plots) && any(P(sim)$.plots == "screen")) {
+      rtsf <- sim$rstTimeSinceFire
+      plotFn(rtsf, title = "Time since fire (age)", new = TRUE)
+      # schedule next plot event
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "timeSinceFire", "plot")
+    }
   } else {
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
