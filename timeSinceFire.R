@@ -83,12 +83,6 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initialization;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
-
-### template initialization
 Init <- function(sim) {
   if (is.null(sim$burnLoci)) {
     sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
@@ -98,7 +92,6 @@ Init <- function(sim) {
     if (is.null(sim$fireReturnInterval)) {
       stop(currentModule(sim), " needs a rstTimeSinceFire map. If this does not exist, then passing ",
            "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire")
-
     }
     # Much faster than calling rasterize() again
     sim$rstTimeSinceFire <- sim$fireReturnInterval
