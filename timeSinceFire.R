@@ -2,9 +2,12 @@ defineModule(sim, list(
   name = "timeSinceFire",
   description = "This tracks time since fire for the LandWeb application.",
   keywords = c("fire", "LandWeb"),
-  authors = c(person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = c("aut", "cre"))),
+  authors = c(
+    person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = c("aut", "cre")),
+    person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
+  ),
   childModules = character(),
-  version = list(SpaDES.core = "0.2.3.9009", numeric_version("1.2.1")),
+  version = "1.2.1",
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",

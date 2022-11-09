@@ -1,36 +1,98 @@
 ---
-title: "timeSinceFire"
-author: "Steve Cummming"
-date: "21 October 2016"
+title: "timeSinceFire Manual"
+subtitle: "v.`r SpaDES.core::moduleMetadata(module = 'timeSinceFire', path = '..')$version`"
+date: "Last updated: `r Sys.Date()`"
 output:
-  pdf_document: default
-editor_options: 
-  chunk_output`type: console
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    theme: sandstone
+    number_sections: false
+    df_print: paged
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+  bibliography: citations/references_timeSinceFire.bib
+citation-style: citations/ecology-letters.csl
+link-citations: true
+always_allow_html: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+# timeSinceFire Module
+
+<!-- the following are text references used in captions for LaTeX compatibility -->
+(ref:timeSinceFire) *timeSinceFire*
+
+```{r setup-timeSinceFire, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, results = "hold") ## change to eval = TRUE if all chunks are to be evaluated
+
+## get citation style
+if (!file.exists("citations/ecology-letters.csl")) {
+  dir.create("citations", showWarnings = FALSE)
+  download.file("https://www.zotero.org/styles/ecology-letters", destfile = "citations/ecology-letters.csl")
+}
+
+if (!require(dplyr)) {
+  install.packages("dplyr")
+  library(dplyr)
+}
+
+dir.create("figures", showWarnings = FALSE)
+
+download.file(url = "https://img.shields.io/badge/Made%20with-Markdown-1f425f.png",
+              destfile = "figures/markdownBadge.png",
+              mode = 'wb')
 ```
 
-# Overview
+[![made-with-Markdown](figures/markdownBadge.png)](http://commonmark.org)
+
+<!-- if knitting to pdf remember to add the pandoc_args: ["--extract-media", "."] option to yml in order to get the badge images -->
+
+#### Authors:
+
+`r paste(as.character(SpaDES.core::moduleMetadata(module = "timeSinceFire", path = '..')$authors), sep = ', ')`
+<!-- ideally separate authors with new lines, '\n' not working -->
+
+## Module Overview
+
+### Module summary
 
 Yet Another Age Map Maintainer.
 This one is peculiar to the LandWeb application.
 
-AgeMap is incremented without bound on all flammable cells;
-Cells identified as having been burned in the curent year are set to 0.
+`ageMap` is incremented without bound on all flammable cells;
+cells identified as having been burned in the current year are set to 0.
 
 Any statistics on age structure are to be calculated here, but none are yet implemented...because with the current fire model they would be pretty boring. 
 
-# Events
+### Module inputs and parameters
 
-## Init
+Table \@ref(tab:moduleInputs-timeSinceFire) shows the full list of module inputs.
+
+```{r moduleInputs-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
+df_inputs <- SpaDES.core::moduleInputs("timeSinceFire", "/tmp/RtmpXeMbR7")
+knitr::kable(df_inputs,
+             caption = "List of (ref:timeSinceFire) input objects and their description.") %>%
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+```
+
+A summary of user-visible parameters is provided in Table \@ref(tab:moduleParams-timeSinceFire).
+
+```{r moduleParams-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
+df_params <- SpaDES.core::moduleParams("timeSinceFire", "/tmp/RtmpXeMbR7")
+knitr::kable(df_params, caption = "List of (ref:timeSinceFire) parameters and their description.") %>%
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+```
+
+### Events
+
+#### Init
 
 The `Init` event creates the RasterLayer `rstTimeSinceFire`.
 To do this, it rasterizes the template vegetation map `LCC05` using the `FireReturnInterval` field of the SpatialPoygonDataFrame `shpStudyRegion`.
 This procedure retains the `NA`s which mask the actual study region within the template bounding rectangle. 
 
-Then, the RasterLayer `rstFlammable` is used to mask out areas of open water, rock, etc which can't burn and thus for which TimeSinceFire is not applicable.
+Then, the RasterLayer `rstFlammable` is used to mask out areas of open water, rock, etc which can't burn and thus for which `timeSinceFire` is not applicable.
 These become `NA`s in `rstTimeSinceFire`. 
 
 The results is that all flammable cells within each polygon in the shapefile are set to the fire return interval specified for that polygon / ecoregion.
@@ -40,8 +102,8 @@ The ecoregion age structure will equilibrate to the exponential distribution wit
 No colour ramp or legend is created for this layer.
 
 In the short term, this initial uniform age distribution will result in very high proportions of cells with tsf's greater than the return interval.
-If this becomes a problem, one could initialise to the regional median age.
-This can be done by multiplying the FireReturnInterval by $log(2)$ and then rounding; or some other lower quantile could be chosen: see the [wikipedia page] ](https://en.wikipedia.org/wiki/Exponential`distribution) for the general quantile function.
+If this becomes a problem, one could initialize to the regional median age.
+This can be done by multiplying the `FireReturnInterval` by $log(2)$ and then rounding; or some other lower quantile could be chosen: see the [wikipedia page](https://en.wikipedia.org/wiki/Exponential_distribution) for the general quantile function.
 
 Alternatively, a random exponential age structure could be generated for each ecoregion from the current `rstTimeSinceFire`, roughly as follows.
 See the wiki page for details and possible alternative methods.
@@ -52,37 +114,34 @@ T_ <- (-log(U_)) * rstTimeSinceFire[]
 rstTimeSinceFire[] <- round(T_)
 ```
 
-## Plotting
+#### Plotting
 
 A bare call to `Plot(sim$rstTimeSinceFire)`.
-If you really want to see this, you'll have to live the wutomated colour scheme and legend, or hack `Init` to your satisfaction.
+If you really want to see this, you'll have to live with the automated colour scheme and legend, or hack `Init` to your satisfaction.
 
-## Saving
+#### Saving
 
 Nothing is saved at present. 
 
-## Age
+#### Age
 
 This is the main event. `rstFlammable` is incremented by one.
-Then burned cells, as specified in the inpit vector `burnLoci` are set to age 0.
+Then burned cells, as specified in the input vector `burnLoci` are set to age 0.
 
-# Data dependencies
+### Module outputs
 
-## Input data
+Description of the module outputs (Table \@ref(tab:moduleOutputs-timeSinceFire)).
 
-This module reads no input data directly.
+```{r moduleOutputs-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
+df_outputs <- SpaDES.core::moduleOutputs("timeSinceFire", "/tmp/RtmpXeMbR7")
+knitr::kable(df_outputs, caption = "List of (ref:timeSinceFire) outputs and their description.") %>%
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+```
 
-It requires three inputs for the `Init` event, as noted, and a vector of indices of cells burned for the `age` event.
+### Code and data availability
 
-The input `LCC05` and `shpStudyRegion` could be read in from disk, and `rstFlammable` derived from them, but why would you want to?
-That's what module `initBaseMaps` and `fireData`Prep` do.
+Code available from <https://github.com/fRI-Research/timeSinceFire>.
 
-## Output data
+### Links to other modules
 
-The only output produced is the RasterLayer it maintains, `rstTimeSinceFire`.
-
-# Links to other modules
-
-This module depends on the existence of module `fireNull`, or simular disturbance module to provide a vector of indices of disturbed cell to reset to `tsf=0`.
-
-Could be input to any module tracking an age dependent event or attribute.
+Originally developed as part of the [LandWeb](https://github.com/PredictiveEcology/LandWeb) project.
