@@ -4,18 +4,20 @@ defineModule(sim, list(
   keywords = c("fire", "LandWeb"),
   authors = c(
     person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = c("aut", "cre")),
-    person(c("Alex", "M"), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
+    person(c("Alex", "M."), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
   ),
   childModules = character(),
-  version = "1.2.1",
+  version = list(numeric_version("1.2.1")),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  documentation = list("README.txt", "timeSinceFire.Rmd"),
+  documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
   reqdPkgs = list("raster"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
+    defineParameter("fireTimestep", "integer", 1, NA, NA,
+                    desc = "The number of time units between successive fire events."),
     defineParameter("returnInterval", "numeric", 1.0, NA, NA, desc = "interval between main events"),
     defineParameter("startTime","numeric", 0, NA, NA, desc = "time of first burn event"),
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA,
@@ -34,22 +36,26 @@ defineModule(sim, list(
     defineParameter(".useCache", "logical", FALSE, NA, NA,
                     desc = "simulation time at which the first save event should occur")
   ),
-  inputObjects = data.frame(
-    objectName = c("rstFlammable", "fireReturnInterval", "rstCurrentBurn", "fireTimestep"),
-    objectClass = c("RasterLayer","RasterLayer", "RasterLayer", "numeric"),
-    sourceURL = "",
-    desc = c("A binary Raster, where 1 means 'can burn' ",
-             "A Raster where the pixels represent the fire return interval, in years",
-             "A binary Raster, where 1 means that there was a fire in the current year in that pixel",
-             "The time between burn events, in years. Only tested with this equal to 1"),
-    stringsAsFactors = FALSE
+  inputObjects = bindrows(
+    expectsInput("fireReturnInterval", "RasterLayer",
+                 desc = "A Raster where the pixels represent the fire return interval, in years.",
+                 sourceURL = NA),
+    expectsInput("rstCurrentBurn", "RasterLayer",
+                 desc = "Binary raster of fires, 1 meaning 'burned', 0 or NA is non-burned",
+                 sourceURL = NA),
+    expectsInput("rstFlammable", "RasterLayer",
+                 desc = "A binary Raster, where 1 means 'can burn'.",
+                 sourceURL = NA),
+    expectsInput("rstTimeSinceFire", "RasterLayer",
+                 sourceURL = NA,
+                 desc = "A Raster where the pixels represent the number of years since last burn.")
   ),
-  outputObjects = data.frame(
-    objectName = c("rstTimeSinceFire", "burnLoci"),
-    objectClass = c("RasterLayer", "numeric"),
-    desc = c("A Raster where the pixels represent the number of years since last burn.",
-             "A integer vector of cell indices where burns occurred in the latest year. It is derived from rstCurrentBurn"),
-    stringsAsFactors = FALSE
+  outputObjects = bindrows(
+    createsOutput("burnLoci", "integer",
+                  desc = paste("Cell indices where burns occurred in the latest year.",
+                               "It is derived from `rstCurrentBurn`.")),
+    createsOutput("rstTimeSinceFire", "RasterLayer",
+                  desc = "A Raster where the pixels represent the number of years since last burn.")
   )
 ))
 
@@ -67,7 +73,7 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
     sim <- scheduleEvent(sim, P(sim)$startTime, "timeSinceFire", "age")
   } else if (eventType == "age") {
     sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
-    fireTimestep <- if (is.null(sim$fireTimestep)) P(sim)$returnInterval else sim$fireTimestep
+    fireTimestep <- if (is.null(P(sim)$fireTimestep)) P(sim)$returnInterval else P(sim)$fireTimestep
     sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[]) + as.integer(fireTimestep) # preserves NAs
     sim$rstTimeSinceFire[sim$burnLoci] <- 0L
     # schedule next age event
@@ -87,25 +93,51 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
 }
 
 Init <- function(sim) {
-  if (is.null(sim$burnLoci)) {
-    sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
-  }
+  compareRaster(sim$fireReturnInterval, sim$rstCurrentBurn, sim$rstFlammable, sim$rstTimeSinceFire,
+                crs = TRUE, extent = TRUE, rowcol = TRUE, res = TRUE)
 
-  if (is.null(sim$rstTimeSinceFire)) {
-    if (is.null(sim$fireReturnInterval)) {
-      stop(currentModule(sim), " needs a rstTimeSinceFire map. If this does not exist, then passing ",
-           "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire")
-    }
-    # Much faster than calling rasterize() again
-    sim$rstTimeSinceFire <- sim$fireReturnInterval
-    #sim$rstTimeSinceFire[] <- factorValues(sim$rasterToMatch, sim$rasterToMatch[],
-    #                                       att = "fireReturnInterval")[[1]]
-    sim$rstTimeSinceFire[sim$rstFlammable[] == 0L] <- NA #non-flammable areas are permanent.
-    sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[])
-  }
+  sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
+
   return(invisible(sim))
 }
 
 plotFn <- function(rtsf, title = "Time since fire (age)", new = TRUE) {
   Plot(rtsf, title = title, new = new)
+}
+
+.inputObjects <- function(sim) {
+  cacheTags <- c(currentModule(sim), "function:.inputObjects")
+  mod$dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
+  message(currentModule(sim), ": using dataPath '", mod$dPath, "'.")
+
+  # ! ----- EDIT BELOW ----- ! #
+
+  if (!suppliedElsewhere("rstFlammable", sim)) {
+    vegMap <- prepInputsLCC(
+      year = 2005,
+      destinationPath = dPath,
+      studyArea = sim$studyArea,
+      rasterToMatch = sim$rasterToMatch,
+      userTags = c("prepInputsLCC", "studyArea")
+    )
+    vegMap[] <- asInteger(vegMap[])
+    sim$rstFlammable <- defineFlammable(vegMap,
+                                        mask = sim$rasterToMatch,
+                                        nonFlammClasses = c(13L, 16L:19L))
+    sim$rstFlammable <- deratify(rstFlammableLCC, complete = TRUE)
+  }
+
+  if (!suppliedElsewhere("rstTimeSinceFire", sim)) {
+    if (!suppliedElsewhere("fireReturnInterval", sim)) {
+      stop(currentModule(sim), " needs a rstTimeSinceFire map. If this does not exist, then passing ",
+           "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire.")
+    }
+    ## Much faster than calling rasterize() again
+    sim$rstTimeSinceFire <- sim$fireReturnInterval
+    sim$rstTimeSinceFire[sim$rstFlammable[] == 0L] <- NA ## non-flammable areas are permanent
+    sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[])
+  }
+
+  # ! ----- STOP EDITING ----- ! #
+  return(invisible(sim))
 }
