@@ -68,7 +68,7 @@ Table \@ref(tab:moduleInputs-timeSinceFire) shows the full list of module inputs
 df_inputs <- SpaDES.core::moduleInputs("timeSinceFire", "..")
 knitr::kable(df_inputs,
              caption = "List of (ref:timeSinceFire) input objects and their description.") %>%
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
 A summary of user-visible parameters is provided in Table \@ref(tab:moduleParams-timeSinceFire).
@@ -76,7 +76,7 @@ A summary of user-visible parameters is provided in Table \@ref(tab:moduleParams
 ```{r moduleParams-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 df_params <- SpaDES.core::moduleParams("timeSinceFire", "..")
 knitr::kable(df_params, caption = "List of (ref:timeSinceFire) parameters and their description.") %>%
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
 ### Events
@@ -130,7 +130,7 @@ Description of the module outputs (Table \@ref(tab:moduleOutputs-timeSinceFire))
 ```{r moduleOutputs-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 df_outputs <- SpaDES.core::moduleOutputs("timeSinceFire", "..")
 knitr::kable(df_outputs, caption = "List of (ref:timeSinceFire) outputs and their description.") %>%
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+  kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
 ### Code and data availability
