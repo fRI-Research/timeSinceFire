@@ -7,13 +7,13 @@ defineModule(sim, list(
     person(c("Alex", "M."), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
   ),
   childModules = character(),
-  version = list(numeric_version("1.2.1")),
+  version = list(numeric_version("2.0.0")),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
   documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
-  reqdPkgs = list("raster"),
+  reqdPkgs = list("raster", "terra"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
     defineParameter("fireTimestep", "integer", 1, NA, NA,
@@ -37,16 +37,16 @@ defineModule(sim, list(
                     desc = "simulation time at which the first save event should occur")
   ),
   inputObjects = bindrows(
-    expectsInput("fireReturnInterval", "RasterLayer",
+    expectsInput("fireReturnInterval", "SpatRaster",
                  desc = "A Raster where the pixels represent the fire return interval, in years.",
                  sourceURL = NA),
-    expectsInput("rstCurrentBurn", "RasterLayer",
+    expectsInput("rstCurrentBurn", "SpatRaster",
                  desc = "Binary raster of fires, 1 meaning 'burned', 0 or NA is non-burned",
                  sourceURL = NA),
-    expectsInput("rstFlammable", "RasterLayer",
+    expectsInput("rstFlammable", "SpatRaster",
                  desc = "A binary Raster, where 1 means 'can burn'.",
                  sourceURL = NA),
-    expectsInput("rstTimeSinceFire", "RasterLayer",
+    expectsInput("rstTimeSinceFire", "SpatRaster",
                  sourceURL = NA,
                  desc = "A Raster where the pixels represent the number of years since last burn.")
   ),
@@ -54,7 +54,7 @@ defineModule(sim, list(
     createsOutput("burnLoci", "integer",
                   desc = paste("Cell indices where burns occurred in the latest year.",
                                "It is derived from `rstCurrentBurn`.")),
-    createsOutput("rstTimeSinceFire", "RasterLayer",
+    createsOutput("rstTimeSinceFire", "SpatRaster",
                   desc = "A Raster where the pixels represent the number of years since last burn.")
   )
 ))
@@ -93,8 +93,8 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
 }
 
 Init <- function(sim) {
-  compareRaster(sim$fireReturnInterval, sim$rstCurrentBurn, sim$rstFlammable, sim$rstTimeSinceFire,
-                crs = TRUE, extent = TRUE, rowcol = TRUE, res = TRUE)
+  compareGeom(sim$fireReturnInterval, sim$rstCurrentBurn, sim$rstFlammable, sim$rstTimeSinceFire,
+              crs = TRUE, extent = TRUE, rowcol = TRUE, res = TRUE)
 
   sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
 
@@ -124,7 +124,6 @@ plotFn <- function(rtsf, title = "Time since fire (age)", new = TRUE) {
     sim$rstFlammable <- defineFlammable(vegMap,
                                         mask = sim$rasterToMatch,
                                         nonFlammClasses = c(13L, 16L:19L))
-    sim$rstFlammable <- deratify(rstFlammableLCC, complete = TRUE)
   }
 
   if (!suppliedElsewhere("rstTimeSinceFire", sim)) {
