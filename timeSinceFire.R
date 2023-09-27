@@ -93,7 +93,6 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
 }
 
 Init <- function(sim) {
-  browser()
   compareGeom(sim$fireReturnInterval, sim$rstCurrentBurn, sim$rstFlammable, sim$rstTimeSinceFire,
               crs = TRUE, ext = TRUE, rowcol = TRUE, res = TRUE)
 
