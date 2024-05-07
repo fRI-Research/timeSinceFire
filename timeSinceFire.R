@@ -107,8 +107,8 @@ plotFn <- function(rtsf, title = "Time since fire (age)", new = TRUE) {
 
 .inputObjects <- function(sim) {
   cacheTags <- c(currentModule(sim), "function:.inputObjects")
-  mod$dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
-  message(currentModule(sim), ": using dataPath '", mod$dPath, "'.")
+  dPath <- asPath(inputPath(sim), 1)
+  message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
   # ! ----- EDIT BELOW ----- ! #
 
