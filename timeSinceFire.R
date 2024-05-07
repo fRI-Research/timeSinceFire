@@ -1,18 +1,20 @@
 defineModule(sim, list(
   name = "timeSinceFire",
-  description = "This tracks time since fire for the LandWeb application.",
+  description = "tracks time since fire",
   keywords = c("fire", "LandWeb"),
   authors = c(
     person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = c("aut", "cre")),
     person(c("Alex", "M."), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
   ),
   childModules = character(),
-  version = list(numeric_version("2.0.0")),
+  version = list(numeric_version("2.1.0")),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
   documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
+  loadOrder = list(after = c("fireSense_SpreadPredict", "LandMine", "scfmSpread",  ## TODO: add Favier
+                             "LandWeb_output")),
   reqdPkgs = list("raster", "terra"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
