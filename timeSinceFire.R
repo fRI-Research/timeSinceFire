@@ -1,27 +1,31 @@
 defineModule(sim, list(
   name = "timeSinceFire",
-  description = "tracks time since fire",
-  keywords = c("fire", "LandWeb"),
+  description = "simple module to track time since fire",
+  keywords = c("time since fire", "time since disturbance"),
   authors = c(
-    person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = c("aut", "cre")),
-    person(c("Alex", "M."), "Chubaty", email = "achubaty@for-cast.ca", role = c("ctb"))
+    person(c("Steve", "G"), "Cumming", email = "stevec@sbf.ulaval.ca", role = "aut"),
+    person(c("Alex", "M."), "Chubaty", email = "achubaty@for-cast.ca", role = c("aut", "cre"))
   ),
   childModules = character(),
-  version = list(numeric_version("2.1.0")),
-  spatialExtent = raster::extent(rep(NA_real_, 4)),
+  version = list(timeSinceFire = numeric_version("3.0.0")),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
-  loadOrder = list(after = c("fireSense_SpreadPredict", "LandMine", "scfmSpread",  ## TODO: add Favier
-                             "LandWeb_output")),
-  reqdPkgs = list("raster", "terra"),
+  documentation = list("README.md", "timeSinceFire.Rmd"),
+  loadOrder = list(
+    after = c("fireSense_SpreadPredict", "LandMine", "scfmSpread", "LandWeb_output")
+  ),
+  reqdPkgs = list(
+    "terra",
+    "PredictiveEcology/LandR@development", ## LandR only used to create default inputs
+    "PredictiveEcology/reproducible@development"
+  ),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
-    defineParameter("fireTimestep", "integer", 1, NA, NA,
+    defineParameter("fireTimestep", "integer", 1L, NA, NA,
                     desc = "The number of time units between successive fire events."),
     defineParameter("returnInterval", "numeric", 1.0, NA, NA, desc = "interval between main events"),
-    defineParameter("startTime","numeric", 0, NA, NA, desc = "time of first burn event"),
+    defineParameter("startTime", "numeric", start(sim), NA, NA, desc = "time of first burn event"),
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA,
                     desc = "simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA,
@@ -66,25 +70,24 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
     ### check for more detailed object dependencies:
     ### (use `checkObject` or similar)
 
-    # do stuff for this event
+    ## do stuff for this event
     sim <- Init(sim)
 
-    # schedule future event(s)
+    ## schedule future event(s)
     sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "timeSinceFire", "plot")
-    sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "timeSinceFire", "save")
     sim <- scheduleEvent(sim, P(sim)$startTime, "timeSinceFire", "age")
   } else if (eventType == "age") {
     sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
     fireTimestep <- if (is.null(P(sim)$fireTimestep)) P(sim)$returnInterval else P(sim)$fireTimestep
     sim$rstTimeSinceFire[] <- as.integer(sim$rstTimeSinceFire[]) + as.integer(fireTimestep) # preserves NAs
     sim$rstTimeSinceFire[sim$burnLoci] <- 0L
-    # schedule next age event
+    ## schedule next age event
     sim <- scheduleEvent(sim, time(sim) + fireTimestep, "timeSinceFire", "age")
   } else if (eventType == "plot") {
     if (anyPlotting(P(sim)$.plots) && any(P(sim)$.plots == "screen")) {
       rtsf <- sim$rstTimeSinceFire
       plotFn(rtsf, title = "Time since fire (age)", new = TRUE)
-      # schedule next plot event
+      ## schedule next plot event
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "timeSinceFire", "plot")
     }
   } else {
@@ -103,29 +106,27 @@ Init <- function(sim) {
   return(invisible(sim))
 }
 
-plotFn <- function(rtsf, title = "Time since fire (age)", new = TRUE) {
-  Plot(rtsf, title = title, new = new)
-}
-
 .inputObjects <- function(sim) {
   cacheTags <- c(currentModule(sim), "function:.inputObjects")
   dPath <- asPath(inputPath(sim), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
   # ! ----- EDIT BELOW ----- ! #
-
   if (!suppliedElsewhere("rstFlammable", sim)) {
-    vegMap <- prepInputsLCC(
-      year = 2005,
+    vegMap <- LandR::prepInputs_SCANFI_LCC_FAO( ## TODO: prepInputs fails to unzip
+      year = 2020,
       destinationPath = dPath,
-      studyArea = sim$studyArea,
-      rasterToMatch = sim$rasterToMatch,
-      userTags = c("prepInputsLCC", "studyArea")
+      cropTo = sim$studyArea,
+      maskTo = sim$studyArea
+    ) |>
+      Cache() |>
+      terra::as.int()
+
+    sim$rstFlammable <- LandR::defineFlammable(
+      vegMap,
+      mask = sim$rasterToMatch,
+      nonFlammClasses = c(20, 30, 40, 80) ## NTEMS codes for SCANFI LCC
     )
-    vegMap[] <- asInteger(vegMap[])
-    sim$rstFlammable <- defineFlammable(vegMap,
-                                        mask = sim$rasterToMatch,
-                                        nonFlammClasses = c(13L, 16L:19L))
   }
 
   if (!suppliedElsewhere("rstTimeSinceFire", sim)) {

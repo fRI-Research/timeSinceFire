@@ -1,6 +1,6 @@
 ---
 title: "timeSinceFire Manual"
-subtitle: "v.`r SpaDES.core::moduleMetadata(module = 'timeSinceFire', path = '..')$version`"
+subtitle: "v.`r SpaDES.core::moduleVersion(module = 'timeSinceFire', path = '..')`"
 date: "Last updated: `r Sys.Date()`"
 output:
   bookdown::html_document2:
@@ -53,12 +53,9 @@ Please report any discrepancies or omissions at <https://github.com/fRI-Research
 ### Module summary
 
 Yet Another Age Map Maintainer.
-This one is peculiar to the LandWeb application.
 
 `ageMap` is incremented without bound on all flammable cells;
 cells identified as having been burned in the current year are set to 0.
-
-Any statistics on age structure are to be calculated here, but none are yet implemented...because with the current fire model they would be pretty boring. 
 
 ### Module inputs and parameters
 
@@ -67,7 +64,7 @@ Table \@ref(tab:moduleInputs-timeSinceFire) shows the full list of module inputs
 ```{r moduleInputs-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 df_inputs <- SpaDES.core::moduleInputs("timeSinceFire", "..")
 knitr::kable(df_inputs,
-             caption = "List of (ref:timeSinceFire) input objects and their description.") %>%
+             caption = "List of (ref:timeSinceFire) input objects and their description.") |>
   kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
@@ -75,7 +72,7 @@ A summary of user-visible parameters is provided in Table \@ref(tab:moduleParams
 
 ```{r moduleParams-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 df_params <- SpaDES.core::moduleParams("timeSinceFire", "..")
-knitr::kable(df_params, caption = "List of (ref:timeSinceFire) parameters and their description.") %>%
+knitr::kable(df_params, caption = "List of (ref:timeSinceFire) parameters and their description.") |>
   kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
@@ -84,15 +81,15 @@ knitr::kable(df_params, caption = "List of (ref:timeSinceFire) parameters and th
 #### Init
 
 The `Init` event creates the RasterLayer `rstTimeSinceFire`.
-To do this, it rasterizes the template vegetation map `LCC05` using the `FireReturnInterval` field of the SpatialPoygonDataFrame `shpStudyRegion`.
+To do this, it rasterizes the template vegetation map `LCC05` using the `FireReturnInterval` field of the `studyAreaReporting` polygons.
 This procedure retains the `NA`s which mask the actual study region within the template bounding rectangle. 
 
-Then, the RasterLayer `rstFlammable` is used to mask out areas of open water, rock, etc which can't burn and thus for which `timeSinceFire` is not applicable.
+Then, the `rstFlammable` raster is used to mask out areas of open water, rock, ice, etc. which can't burn and thus for which `timeSinceFire` is not applicable.
 These become `NA`s in `rstTimeSinceFire`. 
 
-The results is that all flammable cells within each polygon in the shapefile are set to the fire return interval specified for that polygon / ecoregion.
+The results is that all flammable cells within each polygon are set to the fire return interval specified for that polygon.
 Under the basic van Wagner model being implemented, this is the expected landscape mean age.
-The ecoregion age structure will equilibrate to the exponential distribution within a few multiples of the return interval. 
+The polygon age structure will equilibrate to the exponential distribution within a few multiples of the return interval. 
 
 No colour ramp or legend is created for this layer.
 
@@ -100,7 +97,7 @@ In the short term, this initial uniform age distribution will result in very hig
 If this becomes a problem, one could initialize to the regional median age.
 This can be done by multiplying the `FireReturnInterval` by $log(2)$ and then rounding; or some other lower quantile could be chosen: see the [wikipedia page](https://en.wikipedia.org/wiki/Exponential_distribution) for the general quantile function.
 
-Alternatively, a random exponential age structure could be generated for each ecoregion from the current `rstTimeSinceFire`, roughly as follows.
+Alternatively, a random exponential age structure could be generated for each polygon from the current `rstTimeSinceFire`, roughly as follows.
 See the wiki page for details and possible alternative methods.
 
 ```{r}
@@ -111,7 +108,7 @@ rstTimeSinceFire[] <- round(T_)
 
 #### Plotting
 
-A bare call to `Plot(sim$rstTimeSinceFire)`.
+A bare call to `terra::plot(sim$rstTimeSinceFire)`.
 If you really want to see this, you'll have to live with the automated colour scheme and legend, or hack `Init` to your satisfaction.
 
 #### Saving
@@ -120,8 +117,8 @@ Nothing is saved at present.
 
 #### Age
 
-This is the main event. `rstFlammable` is incremented by one.
-Then burned cells, as specified in the input vector `burnLoci` are set to age 0.
+This is the main event: `rstFlammable` is incremented by one.
+Then burned cells, as specified in the `burnLoci` vector are set to age 0.
 
 ### Module outputs
 
@@ -129,7 +126,7 @@ Description of the module outputs (Table \@ref(tab:moduleOutputs-timeSinceFire))
 
 ```{r moduleOutputs-timeSinceFire, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 df_outputs <- SpaDES.core::moduleOutputs("timeSinceFire", "..")
-knitr::kable(df_outputs, caption = "List of (ref:timeSinceFire) outputs and their description.") %>%
+knitr::kable(df_outputs, caption = "List of (ref:timeSinceFire) outputs and their description.") |>
   kableExtra::kable_styling(latex_options = "scale_down", full_width = FALSE)
 ```
 
