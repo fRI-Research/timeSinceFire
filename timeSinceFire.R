@@ -15,6 +15,9 @@ defineModule(sim, list(
   loadOrder = list(
     after = c("fireSense_SpreadPredict", "LandMine", "scfmSpread", "LandWeb_output")
   ),
+  documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
+  loadOrder = list(after = c("fireSense", "LandMine", "scfmSpread",  ## TODO: add Favier
+                             "LandWeb_output")),
   reqdPkgs = list(
     "terra",
     "PredictiveEcology/LandR@development", ## LandR only used to create default inputs
@@ -91,15 +94,26 @@ doEvent.timeSinceFire <- function(sim, eventTime, eventType, debug = FALSE) {
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "timeSinceFire", "plot")
     }
   } else {
-    warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
-                  "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
+    ## fmt: skip
+    warning(paste(
+      "Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
+      "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""
+    ))
   }
   return(invisible(sim))
 }
 
 Init <- function(sim) {
-  compareGeom(sim$fireReturnInterval, sim$rstCurrentBurn, sim$rstFlammable, sim$rstTimeSinceFire,
-              crs = TRUE, ext = TRUE, rowcol = TRUE, res = TRUE)
+  terra::compareGeom(
+    sim$fireReturnInterval,
+    sim$rstCurrentBurn,
+    sim$rstFlammable,
+    sim$rstTimeSinceFire,
+    crs = TRUE,
+    ext = TRUE,
+    rowcol = TRUE,
+    res = TRUE
+  )
 
   sim$burnLoci <- which(sim$rstCurrentBurn[] == 1)
 
@@ -113,7 +127,8 @@ Init <- function(sim) {
 
   # ! ----- EDIT BELOW ----- ! #
   if (!suppliedElsewhere("rstFlammable", sim)) {
-    vegMap <- LandR::prepInputs_SCANFI_LCC_FAO( ## TODO: prepInputs fails to unzip
+    vegMap <- LandR::prepInputs_SCANFI_LCC_FAO(
+      ## TODO: prepInputs fails to unzip
       year = 2020,
       destinationPath = dPath,
       cropTo = sim$studyArea,
@@ -131,8 +146,11 @@ Init <- function(sim) {
 
   if (!suppliedElsewhere("rstTimeSinceFire", sim)) {
     if (!suppliedElsewhere("fireReturnInterval", sim)) {
-      stop(currentModule(sim), " needs a rstTimeSinceFire map. If this does not exist, then passing ",
-           "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire.")
+      stop(
+        currentModule(sim),
+        " needs a rstTimeSinceFire map. If this does not exist, then passing ",
+        "a fireReturnInterval map will assign the fireReturnInterval as rstTimeSinceFire."
+      )
     }
     ## Much faster than calling rasterize() again
     sim$rstTimeSinceFire <- sim$fireReturnInterval
