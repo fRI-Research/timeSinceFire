@@ -11,10 +11,6 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  documentation = list("README.md", "timeSinceFire.Rmd"),
-  loadOrder = list(
-    after = c("fireSense_SpreadPredict", "LandMine", "scfmSpread", "LandWeb_output")
-  ),
   documentation = list("README.md", "timeSinceFire.Rmd"), ## same file
   loadOrder = list(after = c("fireSense", "LandMine", "scfmSpread",  ## TODO: add Favier
                              "LandWeb_output")),
