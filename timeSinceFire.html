@@ -2973,11 +2973,29 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">timeSinceFire Manual</h1>
 <h3 class="subtitle">v.3.0.0</h3>
-<h4 class="date">Last updated: 2025-10-06</h4>
+<h4 class="date">Last updated: 2026-08-06</h4>
 
 </div>
 
 
+<blockquote>
+<p>[!IMPORTANT]
+<strong>This repository is archived and is no longer maintained.</strong></p>
+<p>Archiving makes a repository <strong>read-only — it does not remove it</strong>. This repository stays public
+and clonable, and <strong>existing pins continue to work</strong>: any project that pins a specific commit
+(e.g. as a git submodule) can fetch and check out that commit exactly as before. <strong>No branches or
+tags have been deleted.</strong> If your project tracks a <em>branch</em> rather than a pinned commit, pin it
+now.</p>
+<p>Development ended when this module was retired from <strong>LandWeb v3</strong> (July 2026), where its
+functionality — deriving the time-since-fire raster (<code>rstTimeSinceFire</code>) — is now provided by
+<strong><a href="https://github.com/PredictiveEcology/burnSummaries">burnSummaries</a></strong>. LandWeb was not the only
+user of this module; other projects are unaffected and may continue to use it at their pinned
+commit.</p>
+<p>Two releases are tagged as convenience reference points:
+<strong><code>v-final</code></strong> (<code>f77e0e96</code>) — the final state of this module; and
+<strong><code>LandWeb-v2</code></strong> (<code>1df453ec</code>) — the commit pinned by the
+<a href="https://github.com/PredictiveEcology/LandWeb/tree/v2">LandWeb <code>v2</code> branch</a>.</p>
+</blockquote>
 <div id="timesincefire-module" class="section level1">
 <h1>timeSinceFire Module</h1>
 <!-- the following are text references used in captions for LaTeX compatibility -->
@@ -3002,7 +3020,7 @@ cells identified as having been burned in the current year are set to 0.</p>
 <div id="module-inputs-and-parameters" class="section level3">
 <h3>Module inputs and parameters</h3>
 <p>Table <a href="#tab:moduleInputs-timeSinceFire">1</a> shows the full list of module inputs.</p>
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 <span id="tab:moduleInputs-timeSinceFire">Table 1: </span><span id="tab:moduleInputs-timeSinceFire">Table 2: </span>List of <em>timeSinceFire</em> input objects and their description.
 </caption>
@@ -3082,7 +3100,7 @@ NA
 </tbody>
 </table>
 <p>A summary of user-visible parameters is provided in Table <a href="#tab:moduleParams-timeSinceFire">3</a>.</p>
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 <span id="tab:moduleParams-timeSinceFire">Table 3: </span><span id="tab:moduleParams-timeSinceFire">Table 4: </span>List of <em>timeSinceFire</em> parameters and their description.
 </caption>
@@ -3332,7 +3350,7 @@ Then burned cells, as specified in the <code>burnLoci</code> vector are set to a
 <div id="module-outputs" class="section level3">
 <h3>Module outputs</h3>
 <p>Description of the module outputs (Table <a href="#tab:moduleOutputs-timeSinceFire">5</a>).</p>
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 <span id="tab:moduleOutputs-timeSinceFire">Table 5: </span><span id="tab:moduleOutputs-timeSinceFire">Table 6: </span>List of <em>timeSinceFire</em> outputs and their description.
 </caption>

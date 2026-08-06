@@ -18,6 +18,26 @@ link-citations: true
 always_allow_html: true
 ---
 
+> [!IMPORTANT]
+> **This repository is archived and is no longer maintained.**
+>
+> Archiving makes a repository **read-only — it does not remove it**. This repository stays public
+> and clonable, and **existing pins continue to work**: any project that pins a specific commit
+> (e.g. as a git submodule) can fetch and check out that commit exactly as before. **No branches or
+> tags have been deleted.** If your project tracks a *branch* rather than a pinned commit, pin it
+> now.
+>
+> Development ended when this module was retired from **LandWeb v3** (July 2026), where its
+> functionality — deriving the time-since-fire raster (`rstTimeSinceFire`) — is now provided by
+> **[burnSummaries](https://github.com/PredictiveEcology/burnSummaries)**. LandWeb was not the only
+> user of this module; other projects are unaffected and may continue to use it at their pinned
+> commit.
+>
+> Two releases are tagged as convenience reference points:
+> **`v-final`** (`f77e0e96`) — the final state of this module; and
+> **`LandWeb-v2`** (`1df453ec`) — the commit pinned by the
+> [LandWeb `v2` branch](https://github.com/PredictiveEcology/LandWeb/tree/v2).
+
 # timeSinceFire Module
 
 <!-- the following are text references used in captions for LaTeX compatibility -->

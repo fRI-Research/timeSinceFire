@@ -1,7 +1,7 @@
 ---
 title: "timeSinceFire Manual"
 subtitle: "v.3.0.0"
-date: "Last updated: 2025-10-06"
+date: "Last updated: 2026-08-06"
 output:
   bookdown::html_document2:
     toc: true
@@ -17,6 +17,26 @@ citation-style: citations/ecology-letters.csl
 link-citations: true
 always_allow_html: true
 ---
+
+> [!IMPORTANT]
+> **This repository is archived and is no longer maintained.**
+>
+> Archiving makes a repository **read-only — it does not remove it**. This repository stays public
+> and clonable, and **existing pins continue to work**: any project that pins a specific commit
+> (e.g. as a git submodule) can fetch and check out that commit exactly as before. **No branches or
+> tags have been deleted.** If your project tracks a *branch* rather than a pinned commit, pin it
+> now.
+>
+> Development ended when this module was retired from **LandWeb v3** (July 2026), where its
+> functionality — deriving the time-since-fire raster (`rstTimeSinceFire`) — is now provided by
+> **[burnSummaries](https://github.com/PredictiveEcology/burnSummaries)**. LandWeb was not the only
+> user of this module; other projects are unaffected and may continue to use it at their pinned
+> commit.
+>
+> Two releases are tagged as convenience reference points:
+> **`v-final`** (`f77e0e96`) — the final state of this module; and
+> **`LandWeb-v2`** (`1df453ec`) — the commit pinned by the
+> [LandWeb `v2` branch](https://github.com/PredictiveEcology/LandWeb/tree/v2).
 
 # timeSinceFire Module
 
@@ -48,7 +68,7 @@ cells identified as having been burned in the current year are set to 0.
 
 Table \@ref(tab:moduleInputs-timeSinceFire) shows the full list of module inputs.
 
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>(\#tab:moduleInputs-timeSinceFire)(\#tab:moduleInputs-timeSinceFire)List of (ref:timeSinceFire) input objects and their description.</caption>
  <thead>
   <tr>
@@ -88,7 +108,7 @@ Table \@ref(tab:moduleInputs-timeSinceFire) shows the full list of module inputs
 
 A summary of user-visible parameters is provided in Table \@ref(tab:moduleParams-timeSinceFire).
 
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>(\#tab:moduleParams-timeSinceFire)(\#tab:moduleParams-timeSinceFire)List of (ref:timeSinceFire) parameters and their description.</caption>
  <thead>
   <tr>
@@ -225,7 +245,7 @@ Then burned cells, as specified in the `burnLoci` vector are set to age 0.
 
 Description of the module outputs (Table \@ref(tab:moduleOutputs-timeSinceFire)).
 
-<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>(\#tab:moduleOutputs-timeSinceFire)(\#tab:moduleOutputs-timeSinceFire)List of (ref:timeSinceFire) outputs and their description.</caption>
  <thead>
   <tr>
